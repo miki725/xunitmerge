@@ -11,6 +11,8 @@ def read(fname):
 setup(
     name='xunitmerge',
     version='1.0',
+    author='Miroslav Shubernetskiy',
+    author_email='miroslav@miki725.com',
     description='Utility for merging multiple XUnit xml reports '
                 'into a single xml report.',
     long_description=read('README.rst') + read('LICENSE.rst'),
