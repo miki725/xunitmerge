@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from xml.etree import ElementTree as etree
 
 
-CNAME_TAGS = ('system-out', 'skipped', 'error')
+CNAME_TAGS = ('system-out', 'skipped', 'error', 'failure')
 CNAME_PATTERN = '<![CDATA[{}]]>'
 TAG_PATTERN = '<{tag}{attrs}>{text}</{tag}>'
 
@@ -28,6 +28,9 @@ def patch_etree_cname(etree):
     ...     <testcase classname="some.class.Foo" name="test_error" time="0.001">
     ...         <error type="KeyError" message="Error here">Error here</error>
     ...     </testcase>
+    ...     <testcase classname="some.class.Foo" name="test_failure" time="0.001">
+    ...         <failure type="AssertionError" message="Failure here">Failure here</failure>
+    ...     </testcase>
     ... </testsuite>
     ... '''
     >>> tree = ElementTree.fromstring(xml_string)
@@ -42,6 +45,9 @@ def patch_etree_cname(etree):
     >>> error = re.findall(r'(<error.*?</error>)', saved)[0]
     >>> print(error)
     <error message="Error here" type="KeyError"><![CDATA[Error here]]></error>
+    >>> failure = re.findall(r'(<failure.*?</failure>)', saved)[0]
+    >>> print(failure)
+    <failure message="Failure here" type="AssertionError"><![CDATA[Failure here]]></failure>
     """
     original_serialize = etree._serialize_xml
 
