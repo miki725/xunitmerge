@@ -16,6 +16,7 @@ setup(
     long_description=read('README.rst') + read('LICENSE.rst'),
     url='https://github.com/miki725/xunitmerge',
     packages=find_packages(exclude=['test', 'test.*']),
+    scripts=['bin/xunitmerge'],
     install_requires=[
         'six',
     ],
