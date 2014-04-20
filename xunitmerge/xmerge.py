@@ -4,9 +4,9 @@ from contextlib import contextmanager
 from xml.etree import ElementTree as etree
 
 
-CNAME_TAGS = ('system-out',)
+CNAME_TAGS = ('system-out', 'skipped', 'error')
 CNAME_PATTERN = '<![CDATA[{}]]>'
-TAG_PATTERN = '<{tag}>{content}</{tag}>'
+TAG_PATTERN = '<{tag}{attrs}>{text}</{tag}>'
 
 
 @contextmanager
@@ -19,24 +19,40 @@ def patch_etree_cname(etree):
     >>> from xml.etree import ElementTree
     >>> xml_string = '''
     ... <testsuite name="nosetests" tests="1" errors="0" failures="0" skip="0">
-    ...     <testcase classname="some.class.Foo" name="test_foo" time="0.001">
+    ...     <testcase classname="some.class.Foo" name="test_system_out" time="0.001">
     ...         <system-out>Some output here</system-out>
+    ...     </testcase>
+    ...     <testcase classname="some.class.Foo" name="test_skipped" time="0.001">
+    ...         <skipped type="unittest.case.SkipTest" message="Skipped">Skipped</skipped>
+    ...     </testcase>
+    ...     <testcase classname="some.class.Foo" name="test_error" time="0.001">
+    ...         <error type="KeyError" message="Error here">Error here</error>
     ...     </testcase>
     ... </testsuite>
     ... '''
     >>> tree = ElementTree.fromstring(xml_string)
     >>> with patch_etree_cname(ElementTree):
     ...    saved = ElementTree.tostring(tree)
-    >>> found = re.findall(r'<system-out>(.*?)</system-out>', saved)[0]
-    >>> print(found)
-    <![CDATA[Some output here]]>
+    >>> systemout = re.findall(r'(<system-out>.*?</system-out>)', saved)[0]
+    >>> print(systemout)
+    <system-out><![CDATA[Some output here]]></system-out>
+    >>> skipped = re.findall(r'(<skipped.*?</skipped>)', saved)[0]
+    >>> print(skipped)
+    <skipped message="Skipped" type="unittest.case.SkipTest"><![CDATA[Skipped]]></skipped>
+    >>> error = re.findall(r'(<error.*?</error>)', saved)[0]
+    >>> print(error)
+    <error message="Error here" type="KeyError"><![CDATA[Error here]]></error>
     """
     original_serialize = etree._serialize_xml
 
     def _serialize_xml(write, elem, encoding, qnames, namespaces):
         if elem.tag in CNAME_TAGS:
-            write(TAG_PATTERN.format(tag=elem.tag,
-                                     content=CNAME_PATTERN.format(elem.text)))
+            attrs = ' '.join(
+                ['{}="{}"'.format(k, v) for k, v in elem.attrib.items()]
+            )
+            attrs = ' ' + attrs if attrs else ''
+            text = CNAME_PATTERN.format(elem.text)
+            write(TAG_PATTERN.format(tag=elem.tag, attrs=attrs, text=text))
         else:
             original_serialize(write, elem, encoding, qnames, namespaces)
 
