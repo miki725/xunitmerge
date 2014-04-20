@@ -38,5 +38,5 @@ You can run tests for this package by using nose::
 Credits
 -------
 
-Miroslav Shubernetskiy - `GitHub <https;//github.com/miki725>`_
+Miroslav Shubernetskiy - `GitHub <https://github.com/miki725>`_
 
