@@ -9,6 +9,19 @@ useful when nosetests needs to be run multiple times for different parts of
 a project and then all reports need to be merged to a single report
 (similar to what coverage combine does with multiple coverage reports).
 
+Installing
+----------
+
+You can install ``xunitmerge`` using pip::
+
+    $ pip install xunitmerge
+
+Or alternatively you can install the
+`development <http://github.com/miki725/xunitmerge/archive/master.tar.gz#egg=xunitmerge-dev>`_
+version::
+
+    $ pip install xunitmerge==dev
+
 Using
 -----
 
