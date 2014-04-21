@@ -25,7 +25,8 @@ version::
 Using
 -----
 
-To use the plugin, use an executable ``xunitmerge``.
+To use the plugin, use an executable ``xunitmerge`` which should become
+available after the installation..
 To see it's usage dialog, you can run it with a ``--help`` flag::
 
     xunitmerge --help
