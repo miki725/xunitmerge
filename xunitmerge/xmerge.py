@@ -2,6 +2,7 @@ from __future__ import unicode_literals, print_function
 import six
 from contextlib import contextmanager
 from xml.etree import ElementTree as etree
+from xml.sax.saxutils import escape
 
 
 CNAME_TAGS = ('system-out', 'skipped', 'error', 'failure')
@@ -54,7 +55,7 @@ def patch_etree_cname(etree):
     def _serialize_xml(write, elem, encoding, qnames, namespaces):
         if elem.tag in CNAME_TAGS:
             attrs = ' '.join(
-                ['{}="{}"'.format(k, v) for k, v in elem.attrib.items()]
+                ['{}="{}"'.format(k, escape(v)) for k, v in elem.attrib.items()]
             )
             attrs = ' ' + attrs if attrs else ''
             text = CNAME_PATTERN.format(elem.text)
