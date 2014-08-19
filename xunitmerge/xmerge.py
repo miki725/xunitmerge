@@ -36,7 +36,7 @@ def patch_etree_cname(etree):
     ... '''
     >>> tree = ElementTree.fromstring(xml_string)
     >>> with patch_etree_cname(ElementTree):
-    ...    saved = ElementTree.tostring(tree)
+    ...    saved = str(ElementTree.tostring(tree))
     >>> systemout = re.findall(r'(<system-out>.*?</system-out>)', saved)[0]
     >>> print(systemout)
     <system-out><![CDATA[Some output here]]></system-out>
@@ -52,16 +52,17 @@ def patch_etree_cname(etree):
     """
     original_serialize = etree._serialize_xml
 
-    def _serialize_xml(write, elem, encoding, qnames, namespaces):
+    def _serialize_xml(write, elem, *args, **kwargs):
         if elem.tag in CNAME_TAGS:
             attrs = ' '.join(
-                ['{}={}'.format(k, quoteattr(v)) for k, v in elem.attrib.items()]
+                ['{}={}'.format(k, quoteattr(v))
+                 for k, v in sorted(elem.attrib.items())]
             )
             attrs = ' ' + attrs if attrs else ''
             text = CNAME_PATTERN.format(elem.text)
             write(TAG_PATTERN.format(tag=elem.tag, attrs=attrs, text=text))
         else:
-            original_serialize(write, elem, encoding, qnames, namespaces)
+            original_serialize(write, elem, *args, **kwargs)
 
     etree._serialize_xml = etree._serialize['xml'] = _serialize_xml
 

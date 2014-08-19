@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name='xunitmerge',
-    version='1.0.1',
+    version='1.0.2',
     author='Miroslav Shubernetskiy',
     author_email='miroslav@miki725.com',
     description='Utility for merging multiple XUnit xml reports '
