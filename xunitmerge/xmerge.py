@@ -100,9 +100,14 @@ def merge_trees(*trees):
     return first_tree
 
 
-def merge_xunit(files, output):
+def merge_xunit(files, output, callback=None):
     """
     Merge the given xunit xml files into a single output xml file.
+
+    If callback is not None, it will be called with the merged ElementTree
+    before the output file is written (useful for applying other fixes to
+    the merged file). This can either modify the element tree in place (and
+    return None) or return a completely new ElementTree to be written.
     """
     trees = []
 
@@ -110,6 +115,11 @@ def merge_xunit(files, output):
         trees.append(etree.parse(f))
 
     merged = merge_trees(*trees)
+
+    if callback is not None:
+        result = callback(merged)
+        if result is not None:
+            merged = result
 
     with patch_etree_cname(etree):
         merged.write(output, encoding='utf-8', xml_declaration=True)
