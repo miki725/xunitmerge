@@ -54,11 +54,9 @@ def patch_etree_cname(etree):
     original_serialize = etree._serialize_xml
 
     def _render_attrs(elem):
-        attrs = sorted(elem.attrib.items())
-        if len(attrs) > 0:
-            return ''.join(' {}={}'.format(k, quoteattr(v)) for k, v in attrs)
-        else:
-            return ''
+        return ''.join(
+            ' {}={}'.format(k, quoteattr(v))
+            for k, v in sorted(elem.attrib.items()))
 
     def _render_tag(elem):
         attrs = _render_attrs(elem)
