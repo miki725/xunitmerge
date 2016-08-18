@@ -53,27 +53,42 @@ def patch_etree_cname(etree):
     """
     original_serialize = etree._serialize_xml
 
-    def _serialize_xml(write, elem, *args, **kwargs):
-        if elem.tag in CNAME_TAGS:
-            attrs = ' '.join(
-                ['{}={}'.format(k, quoteattr(v))
-                 for k, v in sorted(elem.attrib.items())]
-            )
-            attrs = ' ' + attrs if attrs else ''
-            text = CNAME_PATTERN.format(elem.text)
-            write(TAG_PATTERN.format(
-                tag=elem.tag,
-                attrs=attrs,
-                text=text
-            ).encode('utf-8'))
+    def _render_attrs(elem):
+        attrs = sorted(elem.attrib.items())
+        if len(attrs) > 0:
+            return ''.join(' {}={}'.format(k, quoteattr(v)) for k, v in attrs)
         else:
-            original_serialize(write, elem, *args, **kwargs)
+            return ''
+
+    def _render_tag(elem):
+        attrs = _render_attrs(elem)
+        text = CNAME_PATTERN.format(elem.text)
+        return TAG_PATTERN.format(tag=elem.tag, attrs=attrs, text=text)
+
+    if six.PY3:
+        def _serialize_xml(
+                write, elem, qnames, namespaces, short_empty_elements,
+                **kwargs):
+            if elem.tag in CNAME_TAGS:
+                write(_render_tag(elem))
+            else:
+                original_serialize(
+                    write, elem, qnames, namespaces, short_empty_elements,
+                    **kwargs)
+    else:
+        def _serialize_xml(
+                write, elem, encoding, qnames, namespaces):
+            if elem.tag in CNAME_TAGS:
+                write(etree._encode(_render_tag(elem), encoding))
+            else:
+                original_serialize(
+                    write, elem, encoding, qnames, namespaces)
 
     etree._serialize_xml = etree._serialize['xml'] = _serialize_xml
-
-    yield
-
-    etree._serialize_xml = etree._serialize['xml'] = original_serialize
+    try:
+        yield
+    finally:
+        etree._serialize_xml = etree._serialize['xml'] = original_serialize
 
 
 def merge_trees(*trees):
