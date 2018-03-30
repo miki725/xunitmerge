@@ -6,7 +6,7 @@ from xml.sax.saxutils import quoteattr
 import six
 
 
-CNAME_TAGS = ('system-out', 'skipped', 'error', 'failure')
+CNAME_TAGS = ('system-out', 'system-err', 'skipped', 'error', 'failure')
 CNAME_PATTERN = '<![CDATA[{}]]>'
 TAG_PATTERN = '<{tag}{attrs}>{text}</{tag}>'
 
@@ -61,11 +61,17 @@ def patch_etree_cname(etree):
             )
             attrs = ' ' + attrs if attrs else ''
             text = CNAME_PATTERN.format(elem.text)
-            write(TAG_PATTERN.format(
+            content = TAG_PATTERN.format(
                 tag=elem.tag,
                 attrs=attrs,
                 text=text
-            ).encode('utf-8'))
+            )
+            if six.PY3:
+                pass
+            else:
+                # ensure py2 's encoding
+                content = content.encode('utf-8')
+            write(content)
         else:
             original_serialize(write, elem, *args, **kwargs)
 
@@ -82,27 +88,52 @@ def merge_trees(*trees):
     This combines all of the children test-cases and also merges
     all of the metadata of how many tests were executed, etc.
     """
-    first_tree = trees[0]
-    first_root = first_tree.getroot()
+    def collecter():
+        while True:
+            elem = yield
+            if not len(elem):
+                return
+            for key in stats.keys():
+                value = elem.attrib.get(key)
+                if value:
+                    stats[key] = float(value) + float(stats.get(key, 0))
+                    if key != 'time':
+                        stats[key] = int(stats[key])
 
-    if len(trees) == 0:
-        return first_tree
+    if len(trees) == 1:
+        return trees[0]
 
-    for tree in trees[1:]:
+    merged_root = etree.Element('testsuites')
+    merged_tree = etree.ElementTree(merged_root)
+
+    stats = {
+        'tests': 0,
+        'disabled': 0,
+        'skipped': 0,
+        'failures': 0,
+        'errors': 0,
+        'time': 0
+    }
+
+    for tree in trees:
         root = tree.getroot()
+        merged_root.extend(root.getchildren())
 
-        # append children elements (testcases)
-        first_root.extend(root.getchildren())
+    c = collecter()
+    next(c)
+    for child in merged_root.getchildren():
+        c.send(child)
+    c.close()
 
-        # combine root attributes which stores the number
-        # of executed tests, skipped tests, etc
-        for key, value in first_root.attrib.items():
-            if not value.isdigit():
-                continue
-            combined = six.text_type(int(value) + int(root.attrib.get(key, '0')))
-            first_root.set(key, combined)
+    for key, value in stats.items():
+        merged_root.set(key, six.text_type(value))
 
-    return first_tree
+    try:
+        del merged_root.attrib['name']
+    except KeyError:
+        pass
+
+    return merged_tree
 
 
 def merge_xunit(files, output, callback=None):
@@ -114,10 +145,7 @@ def merge_xunit(files, output, callback=None):
     the merged file). This can either modify the element tree in place (and
     return None) or return a completely new ElementTree to be written.
     """
-    trees = []
-
-    for f in files:
-        trees.append(etree.parse(f))
+    trees = [etree.parse(f) for f in files]
 
     merged = merge_trees(*trees)
 
