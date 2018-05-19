@@ -99,7 +99,7 @@ def merge_trees(*trees):
         for key, value in first_root.attrib.items():
             if not value.isdigit():
                 continue
-            combined = six.text_type(int(value) + int(root.attrib.get(key, '0')))
+            combined = six.text_type(float(value) + float(root.attrib.get(key, '0')))
             first_root.set(key, combined)
 
     return first_tree
