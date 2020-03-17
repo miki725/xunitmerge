@@ -65,7 +65,7 @@ def patch_etree_cname(etree):
                 tag=elem.tag,
                 attrs=attrs,
                 text=text
-            ).encode('utf-8'))
+            ))
         else:
             original_serialize(write, elem, *args, **kwargs)
 
