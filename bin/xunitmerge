@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     'report',
     nargs='+',
-    type=argparse.FileType('r'),
+    type=argparse.FileType('r', encoding='utf-8'),
     help='Path of XUnit xml report. Multiple can be provided.',
 )
 parser.add_argument(
