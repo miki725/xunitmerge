@@ -40,7 +40,7 @@ You can also use it directly in Python::
 
     from xunitmerge import merge_xunit
 
-    merge_xunit(files=['report1.xml', 'report2.xml'], output='merged.xml)
+    merge_xunit(files=['report1.xml', 'report2.xml'], output='merged.xml')
 
 Running tests
 -------------
