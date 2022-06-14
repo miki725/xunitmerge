@@ -92,7 +92,7 @@ def merge_trees(*trees):
         root = tree.getroot()
 
         # append children elements (testcases)
-        first_root.extend(root.getchildren())
+        first_root.extend(list(root))
 
         # combine root attributes which stores the number
         # of executed tests, skipped tests, etc
