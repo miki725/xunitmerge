@@ -61,11 +61,21 @@ def patch_etree_cname(etree):
             )
             attrs = ' ' + attrs if attrs else ''
             text = CNAME_PATTERN.format(elem.text)
+                        text = CNAME_PATTERN.format(elem.text)
+            if isinstance(text, bytes):
+                text = text.decode('utf-8').strip()
+
+            if isinstance(elem.tag, bytes):
+                elem.tag = elem.tag.decode('utf-8').strip()
+
+            if isinstance(attrs, bytes):
+                attrs = attrs.decode('utf-8').strip()
+                
             write(TAG_PATTERN.format(
                 tag=elem.tag,
                 attrs=attrs,
                 text=text
-            ).encode('utf-8'))
+            ))
         else:
             original_serialize(write, elem, *args, **kwargs)
 
